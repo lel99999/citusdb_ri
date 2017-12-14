@@ -16,29 +16,29 @@
         dest: /tmp/events.csv
         mode: 0755
 
-    - name: create table users
-      become: yes
-      become_user: postgres
-      become_method: sudo
-      command: >
-        psql -c "create table github_events(event_id bigint, event_type text, event_public boolean, 
-        repo_id bigint, payload jsonb,repo jsonb,user_id bigint,org jsonb, created_at timestamp);"
-      register:  create_table_users_sql_results
-
-#   - name: printout query results
-#     debug:
-#       #msg: create_table_users_sql_results.stdout_lines
-#       msg: "----------------------------------------"
-#     with_nested: "{{ create_table_users_sql_results.stdout_lines }}"
-
-    - name: "create table events"
+    - name: "create table users"
       become: yes
       become_user: postgres
       become_method: sudo
       command: >
         psql -c "create table github_users(user_id bigint,url text,login text,avatar_url text,
         gravatar_id text,display_login text);"
-      register: create_table_events_sql_results
+      register: create_table_users_sql_results
+
+    - name: create table events
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table github_events(event_id bigint, event_type text, event_public boolean, 
+        repo_id bigint, payload jsonb,repo jsonb,user_id bigint,org jsonb, created_at timestamp);"
+      register:  create_table_events_sql_results
+
+#   - name: printout query results
+#     debug:
+#       #msg: create_table_users_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_table_users_sql_results.stdout_lines }}"
 
     - name: create event index
       become: yes
