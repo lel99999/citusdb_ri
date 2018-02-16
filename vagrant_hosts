@@ -4,6 +4,7 @@ cdbc01
 [workers]
 cdbw01
 cdbw02
+cdbw03
 
 [citustest]
 cdbtest

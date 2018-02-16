@@ -4,6 +4,7 @@
   name:  citusdb multinode setup
   vars:
     pg_user: postgres
+    coordinator_configured: false
 
   tasks:
     - name: "add repository"
