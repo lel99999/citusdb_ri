@@ -17,11 +17,11 @@ Vagrant.configure("2") do |config|
     #cdbw02.vm.box = "wharton-wcit/centos6py36"
     cdbw02.vm.network "private_network", ip: "192.168.60.156"
   end
-  config.vm.define "cdbw02" do |cdbw03|
-    cdbw02.vm.box = "bento/centos-6.7"
-    cdbw02.vm.hostname = "cdbw02"
+  config.vm.define "cdbw03" do |cdbw03|
+    cdbw03.vm.box = "bento/centos-6.7"
+    cdbw03.vm.hostname = "cdbw03"
     #cdbw02.vm.box = "wharton-wcit/centos6py36"
-    cdbw02.vm.network "private_network", ip: "192.168.60.157"
+    cdbw03.vm.network "private_network", ip: "192.168.60.157"
   end
   config.vm.define "cdbtest" do |cdbtest|
     cdbtest.vm.box = "bento/centos-6.7"
