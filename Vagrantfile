@@ -12,6 +12,20 @@ Vagrant.configure("2") do |config|
     cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
 
   end
+  config.vm.define "cdbcHA01" do |cdbcHA01|
+#   cdbcHA01.vm.box = "bento/centos-6.7"
+    cdbcHA01.vm.box = "bento/centos-7.3"
+    cdbcHA01.vm.hostname = "cdbc01"
+    #cdbcHA01.vm.box = "wharton-wcit/centos6py36"
+    cdbcHA01.vm.network "private_network", ip: "192.168.60.150"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.50 cdbc01.local cdbc01' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.55 cdbw01.local cdbw01' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbc01.local cdbcHA01' >> /etc/hosts"
+
+  end
   config.vm.define "cdbw01" do |cdbw01|
 #   cdbw01.vm.box = "bento/centos-6.7"
     cdbw01.vm.box = "bento/centos-7.3"
