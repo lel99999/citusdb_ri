@@ -1,0 +1,280 @@
+---
+- hosts: cdbc01
+  name: Citus Multi Tenant Test
+  become: yes
+  become_method: sudo
+  tasks:
+    - name: Download company data 
+      get_url:
+        url: https://examples.citusdata.com/mt_ref_arch/companies.csv 
+        dest: /tmp/company.csv
+        mode: 0755
+    
+    - name: Download campaigns data 
+      get_url:
+        url: https://examples.citusdata.com/mt_ref_arch/campaigns.csv 
+        dest: /tmp/campaigns.csv
+        mode: 0755
+    
+    - name: Download ads data 
+      get_url:
+        url: https://examples.citusdata.com/mt_ref_arch/ads.csv 
+        dest: /tmp/ads.csv
+        mode: 0755
+    
+    - name: Download clicks data 
+      get_url:
+        url: https://examples.citusdata.com/mt_ref_arch/clicks.csv 
+        dest: /tmp/clicks.csv
+        mode: 0755
+    
+    - name: Download impressions data 
+      get_url:
+        url: https://examples.citusdata.com/mt_ref_arch/impressions.csv 
+        dest: /tmp/impressions.csv
+        mode: 0755
+    
+    - name: Create table companies
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table companies (id bigserial PRIMARY KEY,name text NOT NULL,image_url text, created_at timestamp without time zone NOT NULL,
+        updated_at timestamp without time zone NOT NULL);"
+      register: create_table_companies_sql_results
+    
+    - name: Create table campaigns
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table campaigns (id bigserial, company_id bigint REFERENCES companies(id),name text NOT NULL, cost_model text NOT NULL,
+        state text NOT NULL, monthly_budget bigint, blacklisted_site_urls text[],created_at timestamp without time zone NOT NULL,
+        updated_at timestamp without time zone NOT NULL, PRIMARY KEY (company_id,id)
+        );"
+      register: create_table_campaigns_sql_results
+    
+    - name: Create table ads
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table ads (id bigserial,company_id bigint, campaign_id bigint,name text NOT NULL,image_url text,
+        target_url text, impression_cout bigint DEFAULT 0, clicks_count bigint DEFAULT 0, created_at timestamp without time zone NOT NULL,
+        updated_at timestamp without time zone NOT NULL, PRIMARY KEY(company_id,id),
+        FOREIGN KEY(company_d, campaign_id) REFERENCES campaigns (company_id,id)
+        );"
+      register: create_table_ads_sql_results
+    
+    - name: Create table clicks
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table clicks (id bigserial, company_id bigint,ad_id bigint, clicked_at timestamp without time zone NOT NULL,
+        site_url text NOT NULL,cost_per_click_usd numeric(20,10),user_ip inet NOT NULL,user_data jsonb NOT NULL,
+        PRIMARY KEY(company_id,id),FOREIGN KEY(company_id,ad_id)
+          REFERNCES ads (company_id,id)
+        );"
+      register: create_table_clicks_sql_results
+    
+    - name: Create table impressions
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "create table impressions (id bigserial,company_id bigint,ad_id bigint,seen_at timestamp without time zone NOT NULL,
+        site_url text NOT NULL,cost_per_impression_usd numeric(20,10),user_ip inet NOT NULL,user_data jsonb NOT NULL,
+        PRIMARY KEY(company_id,id),FOREIGN KEY(company_id,ad_id) REFERENCES ads(company_id,id)
+        );"
+      register: create_table_clicks_sql_results
+   
+    - name: create distributed table companies 
+      become: yes
+      become_user: postgres
+      become_metho: sudo
+      command: psql -c "SELECT create_distributed_table('companies', 'id');"
+      register: create_dist_companies_sql_results
+
+#   - name: printout create dist table companies query results
+#     debug:
+#       #msg: create_dist_companies_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_dist_companies_sql_results.stdout_lines }}"
+ 
+    - name: create distributed table campaigns 
+      become: yes
+      become_user: postgres
+      become_metho: sudo
+      command: psql -c "SELECT create_distributed_table('campaigns', 'company_id');"
+      register: create_dist_campaigns_sql_results
+ 
+#   - name: printout create dist table campaigns query results
+#     debug:
+#       #msg: create_dist_campaigns_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_dist_campaigns_sql_results.stdout_lines }}"
+ 
+    - name: create distributed table ads 
+      become: yes
+      become_user: postgres
+      become_metho: sudo
+      command: psql -c "SELECT create_distributed_table('ads', 'company_id');"
+      register: create_dist_ads_sql_results
+
+#   - name: printout create dist table ads query results
+#     debug:
+#       #msg: create_dist_ads_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_dist_ads_sql_results.stdout_lines }}"
+ 
+    - name: create distributed table clicks
+      become: yes
+      become_user: postgres
+      become_metho: sudo
+      command: psql -c "SELECT create_distributed_table('clicks', 'company_id');"
+      register: create_dist_clicks_sql_results
+
+#   - name: printout create dist table clicks query results
+#     debug:
+#       #msg: create_dist_clicks_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_dist_clicks_sql_results.stdout_lines }}"
+ 
+    - name: create distributed table impressions 
+      become: yes
+      become_user: postgres
+      become_metho: sudo
+      command: psql -c "SELECT create_distributed_table('impressions', 'company_id');"
+      register: create_dist_impressions_sql_results
+
+#   - name: printout create dist table impressionss query results
+#     debug:
+#       #msg: create_dist_impressions_sql_results.stdout_lines
+#       msg: "----------------------------------------"
+#     with_nested: "{{ create_dist_impressionss_sql_results.stdout_lines }}"
+ 
+    - name: import companies data
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "\copy companies from '/tmp/companies.csv' with csv;"
+#         psql -c "select 1;"
+
+    - name: import campaigns data
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "\copy campaigns from '/tmp/campaigns.csv' with csv;"
+#         psql -c "select 1;"
+
+    - name: import ads data
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "\copy ads from '/tmp/ads.csv' with csv;"
+#         psql -c "select 1;"
+
+    - name: import clicks data
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "\copy clicks from '/tmp/clicks.csv' with csv;"
+#         psql -c "select 1;"
+
+    - name: import impressions data
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "\copy impressions from '/tmp/impressions.csv' with csv;"
+#         psql -c "select 1;"
+
+### Verfication Queries
+    - name: simple query and update operating on a single tenant
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "SELECT name,cost_model,state,monthly_budget FROM campaigns WHERE company_id = 5 ORDER BY monthly_budget DESC LIMIT 10;"
+      register: select_campaingswhighestbudgets_sql_results
+
+    - name: printout select campaigns with highest budgets
+      debug:
+        #msg: select_campaingswhighestbudgets_sql_results
+        msg: "{{ item[2] }}"
+      with_nested: "{{ select_campaingswhighestbudgets_sql_results.stdout_lines }}"
+
+    - name: update the budgets
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "UPDATE campaigns SET monthly_budget = monthly_budget*2 WHERE company_id = 5;"
+      register: update_campaignbudgets_sql_results
+
+    - name: printout update campaign budgets on single company
+      debug:
+        #msg: update_campaignbudgets_sql_results 
+        msg: "{{ item[2] }}"
+      with_nested: "{{ update_campaignbudgets_sql_results.stdout_lines }}"
+
+    - name: transactionally reallocate campaign budget money
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "
+        BEGIN;
+
+        UPDATE campaigns
+           SET monthly_budget = monthly_budget + 1000
+        WHERE company_id = 5
+           AND id = 40;
+
+        UPDATE campaigns
+           SET monthly_budget = monthly_budget - 1000
+        WHERE company_id = 5
+           AND id = 41;
+
+        COMMIT;"
+      register: trans_reallocatecampaignbudget_sql_results
+
+    - name: printout transaction reallocate campaign budgets on single company
+      debug:
+        #msg: trans_reallocatecampaignbudget_sql_results
+        msg: "{{ item[2] }}"
+      with_nested: "{{ trans_reallocatecampaignbudget_sql_results.stdout_lines }}"
+
+
+    - name: query including aggregates and window functions
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: >
+        psql -c "
+        SELECT a.campaign_id,
+               RANK() OVER (
+                 PARTITION BY a.campaign_id
+                 ORDER BY a.campaign_id, count(*) desc
+               ), count(*) as n_impressions, a.id
+          FROM ads as a,
+               impressions as i
+         WHERE a.company_id = 5
+           AND i.company_id = a.company_id
+           AND i.ad_id      = a.id
+        GROUP BY a.campaign_id, a.id
+        ORDER BY a.campaign_id, n_impressions desc;
+        "
+      register: query_aggregatewindow_sql_results
+
+    - name: printout query including aggregates and window functions
+      debug:
+        #msg: query_aggregatewindow_sql_results 
+        msg: "{{ item[2] }}"
+      with_nested: "{{ query_aggregatewindow_sql_results.stdout_lines }}"
+    
