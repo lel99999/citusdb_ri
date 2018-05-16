@@ -1,4 +1,10 @@
 Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = "1024"
+    v.cpus = 2
+    v.customize ["modifyvm", :id, "--cpuexecutioncap", "70"]
+  end
+
   config.vm.define "cdbc01" do |cdbc01|
 #   cdbc01.vm.box = "bento/centos-6.7"
     cdbc01.vm.box = "bento/centos-7.3"
