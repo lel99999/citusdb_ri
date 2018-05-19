@@ -148,7 +148,6 @@
       #command: echo -e "192.168.60.150\tcdbc01\n192.168.60.155\tcdbw01\n192.168.60.156\tcdbw02\n" >> /etc/hosts
       shell: printf '192.168.60.150\tcdbc01\n192.168.60.155\tcdbw01\n192.168.60.156\tcdbw02\n' >> /etc/hosts
 
-
 - hosts: cdbc01 
 #- hosts: cdbtest
   name: test group->hostname iterator
@@ -196,4 +195,9 @@
       become: yes
       become_user: sudo
       shell:
+
+    - name: start standby 
+      become: yes
+      become_user: sudo
+      shell: sudo -i -u postgres psql -c "pg_ctl -D citus-sr/coordinator2 -l coordinator_logfile start"
 
