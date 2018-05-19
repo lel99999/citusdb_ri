@@ -176,3 +176,24 @@
         msg: "------------------------------------"
       with_nested: "{{ query_cmd.stdout_lines }}"
 
+- hosts: cdbcHA01 
+#- hosts: cdbtest
+  name: setup standby HA Coordinator 
+  tasks:
+    - name: 
+      become: yes
+      become_method: sudo
+      #shell:  echo "{{ item }}"
+      #shell: echo 'sudo -i -u postgres psql -c "SELECT * from master_add_node('{{ item }}', 5432);"'
+      shell: sudo -i -u postgres psql -c "pg_basebackup -D /usr/local/pgsql/citus-sr/coordinator2 -X stream --progress -U postgres -R"
+
+    - name: modify postgresql.conf
+      become: yes
+      become_user: sudo
+      shell:
+
+    - name: modify reovery.conf
+      become: yes
+      become_user: sudo
+      shell:
+
