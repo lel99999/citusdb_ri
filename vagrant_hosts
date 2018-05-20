@@ -1,12 +1,11 @@
 [coords]
-cdbc01
+cdbc01 ansible_host=192.168.60.50
 
 [workers]
-cdbw01
-cdbw02
-cdbw03
+cdbw01 ansible_host=192.168.60.55
+cdbw02 ansible_host=192.168.60.56
+cdbw03 ansible_host=192.168.60.57
 
 [citustest]
-cdbtest
+cdbtest ansible_host=192.168.60.150
 
-[none]

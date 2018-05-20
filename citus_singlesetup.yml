@@ -73,7 +73,7 @@
       become_method: sudo
       lineinfile:
         #dest:  "/var/lib/pgsql/9.6/data/pg_hba.conf"
-        path:  "/var/lib/pgsql/10/data/postgresql.conf"
+        dest:  "/var/lib/pgsql/10/data/postgresql.conf"
         regexp: "listen_addresses = 'localhost'"
         #line: 'host      all     all     192.168.60.0/24 trust'
         insertafter: '^#listen_addresses'
@@ -96,7 +96,7 @@
       become_method: sudo
       lineinfile:
         #dest:  "/var/lib/pgsql/9.6/data/pg_hba.conf"
-        path:  "/var/lib/pgsql/10/data/pg_hba.conf"
+        dest:  "/var/lib/pgsql/10/data/pg_hba.conf"
         regexp: '192\.0\.60\.0'
         #line: 'host      all     all     192.168.60.0/24 trust'
         insertafter: '^# IPv4 local'
