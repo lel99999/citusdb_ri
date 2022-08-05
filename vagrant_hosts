@@ -7,5 +7,16 @@ cdbw02 ansible_host=192.168.60.56
 cdbw03 ansible_host=192.168.60.57
 
 [citustest]
-cdbtest ansible_host=192.168.60.150
+cdbtest ansible_host=192.168.60.58
+
+[coordsRH7]
+cdbc01RH7 ansible_host=192.168.60.150
+
+[workersRH7]
+cdbw01RH7 ansible_host=192.168.60.155
+cdbw02RH7 ansible_host=192.168.60.156
+cdbw03RH7 ansible_host=192.168.60.157
+
+[citustestRH7]
+cdbtestRH7 ansible_host=192.168.60.158
 

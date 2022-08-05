@@ -16,7 +16,7 @@ Vagrant.configure("2") do |config|
     cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-#   cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+#   cdbc01.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbc01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_citus-coordinator.yml"
@@ -38,7 +38,7 @@ Vagrant.configure("2") do |config|
     cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+    cdbcHA01.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbcHA01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_citus-coordinatorHA.yml"
@@ -61,7 +61,7 @@ Vagrant.configure("2") do |config|
     cdbw01.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbw01.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbw01.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-    cdbw01.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+    cdbw01.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbw01.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_citus-workder.yml"
@@ -84,7 +84,7 @@ Vagrant.configure("2") do |config|
     cdbw02.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbw02.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbw02.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-    cdbw02.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+    cdbw02.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbw02.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_citus-workder.yml"
@@ -106,7 +106,7 @@ Vagrant.configure("2") do |config|
     cdbw03.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbw03.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbw03.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-    cdbw03.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+    cdbw03.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbw03.vm.provision "ansible" do |ansible|
       ansible.playbook = "deploy_citus-workder.yml"
@@ -129,7 +129,7 @@ Vagrant.configure("2") do |config|
     cdbtest.vm.provision "shell", :inline => "sudo echo '192.168.60.56 cdbw02.local cdbw02' >> /etc/hosts"
     cdbtest.vm.provision "shell", :inline => "sudo echo '192.168.60.57 cdbw03.local cdbw03' >> /etc/hosts"
     cdbtest.vm.provision "shell", :inline => "sudo echo '192.168.60.60 cdbtest.local cdbtest' >> /etc/hosts"
-    cdbtest.vm.provision "shell", :inline => "sudo echo '192.168.60.150 cdbcHA01.local cdbcHA01' >> /etc/hosts"
+    cdbtest.vm.provision "shell", :inline => "sudo echo '192.168.60.58 cdbcHA01.local cdbcHA01' >> /etc/hosts"
 
     cdbtest.vm.provision "ansible" do |ansible|
       ansible.playbook = "citus_singlesetup.yml"
