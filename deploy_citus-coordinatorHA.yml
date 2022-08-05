@@ -1,0 +1,203 @@
+---
+- hosts: all
+#- hosts: cdbtest
+  name:  citusdb multinode setup
+  vars:
+    pg_user: postgres
+    coordinator_configured: false
+
+  tasks:
+    - name: "add repository"
+      become: yes
+      become_method: sudo
+
+      command: "{{ item }}"
+      with_items:
+        - wget https://install.citusdata.com/community/rpm.sh -O /tmp/rpm.sh
+        - /bin/bash /tmp/rpm.sh
+
+    - name: install PostgreSQL
+      become: yes
+      become_method: sudo
+      command: >
+        yum install -y citus71_10
+      #yum:
+      #  name: "{{ item }}"
+      #  state: latest
+      #with_items:
+      #  - citus71_10
+
+    - name: initialize system data
+      become: yes
+      #become_user: postgres
+      become_method: sudo
+      shell: sudo -i -u postgres /usr/pgsql-10/bin/initdb -D /var/lib/pgsql/10/data 
+        #service postgres-10 initdb || /usr/pgsql-10/bin/postgresql-10-setup initdb
+
+
+    - name: preload citus extension
+      become: yes
+      become_method: sudo
+      shell: echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
+      #command: >
+      #   echo "shared_preload_libraries = 'citus'" | sudo tee -a /var/lib/pgsql/10/data/postgresql.conf
+
+#   - name: check connection settings
+#     become: yes
+#     become_method: sudo
+#     #become_user: postgres
+#     #command: >
+#     shell: >
+#       grep "listen_addresses = '*'" /var/lib/pgsql/10/data/postgresql.conf 
+#     register: grep_found
+    
+#    - name: print grep_found
+#      debug: var=grep_found.rc 
+
+#   - name:  modify connection settings
+#     become: yes
+#     become_method: sudo
+#     command: >
+#       sed -i.bak "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /var/lib/pgsql/10/data/postgresql.conf
+#       #sed -i.bak "s/#listen_addresses = 'localhost'/listen_addresses = '*'/g" /var/lib/pgsql/9.6/data/postgresql.conf
+#     when: grep_found.stdout == 0
+
+    - name: install libselinux-python
+      become: yes
+      become_method: sudo
+      yum:
+        name: libselinux-python
+
+    - name: modify connection settings/listening ports
+      become: yes
+      become_method: sudo
+      lineinfile:
+        #dest:  "/var/lib/pgsql/9.6/data/pg_hba.conf"
+        dest:  "/var/lib/pgsql/10/data/postgresql.conf"
+        regexp: "listen_addresses = 'localhost'"
+        #line: 'host      all     all     192.168.60.0/24 trust'
+        insertafter: '^#listen_addresses'
+        line: "listen_addresses = '*'"
+ 
+    - name: "check if authentication of local subnet present"
+      become: yes
+      become_method: sudo 
+      shell: >
+        grep -i "192.168.60" /var/lib/pgsql/10/data/pg_hba.conf | wc -l
+        #grep -i "192.168.60" /var/lib/pgsql/9.6/data/pg_hba.conf
+      register: auth_found
+      #ignore_errors: True
+
+#    - name: print auth_found
+#      debug: var=auth_found.rc
+
+    - name: Configure authentication
+      become: yes
+      become_method: sudo
+      lineinfile:
+        #dest:  "/var/lib/pgsql/9.6/data/pg_hba.conf"
+        dest:  "/var/lib/pgsql/10/data/pg_hba.conf"
+        regexp: '192\.0\.60\.0'
+        #line: 'host      all     all     192.168.60.0/24 trust'
+        insertafter: '^# IPv4 local'
+        line: 'host      all     all     192.168.60.0/24 trust'
+#       #state: present
+#        when:  auth_found.rc == 0
+
+    - name: start database servers
+      become: yes
+      become_method: sudo
+      service:
+        name: postgresql-10
+        state: restarted
+        enabled: yes
+
+    - name: create citus extension
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: psql -c "CREATE EXTENSION citus;"
+      #register: cmd_results
+
+    - name: verify citus exstension
+      become: yes
+      become_user: postgres
+      become_method: sudo
+      command: psql -c "\dx"
+      register:  dx_cmd_results
+
+    - name: printout extension query
+      debug:
+        #msg: dx_cmd_results.stdout_lines
+        msg: "{{ item[2] }}"
+      with_nested: "{{ dx_cmd_results.stdout_lines }}"
+
+#   - name: IPTables inbound configuration
+#     become: yes
+#     become_method: sudo
+#     command: iptables -A INPUT -p tcp -s 192.168.60.0/24 --dport 5432 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+
+#   - name: IPTables outbound configuration
+#     become: yes
+#     become_method: sudo
+#     command: iptables -A OUTPUT -p tcp --sport 5432 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+    - name: Modify Hosts file for Hostname Resolution
+      become: yes
+      become_method: sudo
+      #command: echo -e "192.168.60.150\tcdbc01\n192.168.60.155\tcdbw01\n192.168.60.156\tcdbw02\n" >> /etc/hosts
+      shell: printf '192.168.60.150\tcdbc01\n192.168.60.155\tcdbw01\n192.168.60.156\tcdbw02\n' >> /etc/hosts
+
+- hosts: cdbc01 
+#- hosts: cdbtest
+  name: test group->hostname iterator
+  tasks:
+    - name: "iterate over worker group"
+      become: yes
+      become_method: sudo
+      #shell:  echo "{{ item }}"
+      #shell: echo 'sudo -i -u postgres psql -c "SELECT * from master_add_node('{{ item }}', 5432);"'
+      shell: sudo -i -u postgres psql -c "SELECT * from master_add_node('{{ item }}', 5432);"
+      register:  echo_cmd
+      with_items: "{{ groups['workers'] }}"
+
+    - name: "print list"
+      debug: msg={{ echo_cmd }}
+
+    - name: verify installation
+      become: yes
+      become_method: sudo
+      shell: sudo -i -u postgres psql -c "SELECT * FROM master_get_active_worker_nodes();"
+      register: query_cmd
+
+    - name: verification query results
+      debug:
+        msg: "------------------------------------"
+      with_nested: "{{ query_cmd.stdout_lines }}"
+
+- hosts: cdbcHA01 
+#- hosts: cdbtest
+  name: setup standby HA Coordinator 
+  tasks:
+    - name: 
+      become: yes
+      become_method: sudo
+      #shell:  echo "{{ item }}"
+      #shell: echo 'sudo -i -u postgres psql -c "SELECT * from master_add_node('{{ item }}', 5432);"'
+      shell: sudo -i -u postgres psql -c "pg_basebackup -D /usr/local/pgsql/citus-sr/coordinator2 -X stream --progress -U postgres -R"
+
+    - name: modify postgresql.conf
+      become: yes
+      become_user: sudo
+      shell:
+
+    - name: modify reovery.conf
+      become: yes
+      become_user: sudo
+      shell:
+
+    - name: start standby 
+      become: yes
+      become_user: sudo
+      shell: sudo -i -u postgres psql -c "pg_ctl -D citus-sr/coordinator2 -l coordinator_logfile start"
+
