@@ -61,7 +61,8 @@
 #   - postgresql-client7
 #   - sasRH7
 #   - stattransfer14
-    - redis7
+    - epel7
+    - openjdk1.8
 
   post_tasks:
 #   - name: register mime types
